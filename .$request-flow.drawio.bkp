@@ -1,0 +1,444 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mxfile host="app.diagrams.net" modified="2024-01-01T00:00:00.000Z" agent="5.0" version="21.1.2" etag="request-flow-v2" type="device">
+  <diagram name="Request Flow" id="request-flow">
+    <mxGraphModel dx="1434" dy="900" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1400" pageHeight="1200" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        
+        <!-- Title -->
+        <mxCell id="title" value="Chat Request Flow - LangGraph AI Agent Server (with Chart Generation)" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=20;fontStyle=1" vertex="1" parent="1">
+          <mxGeometry x="400" y="20" width="600" height="40" as="geometry" />
+        </mxCell>
+        
+        <!-- Swimlanes -->
+        <mxCell id="swimlane-container" value="" style="swimlane;startSize=0;" vertex="1" parent="1">
+          <mxGeometry x="40" y="80" width="1320" height="1080" as="geometry" />
+        </mxCell>
+        
+        <!-- Client Lane -->
+        <mxCell id="client-lane" value="Client" style="swimlane;horizontal=0;fillColor=#f5f5f5;" vertex="1" parent="swimlane-container">
+          <mxGeometry x="0" y="0" width="1320" height="100" as="geometry" />
+        </mxCell>
+        
+        <!-- API Layer Lane -->
+        <mxCell id="api-lane" value="API Layer" style="swimlane;horizontal=0;fillColor=#dae8fc;" vertex="1" parent="swimlane-container">
+          <mxGeometry x="0" y="100" width="1320" height="120" as="geometry" />
+        </mxCell>
+        
+        <!-- Middleware Lane -->
+        <mxCell id="middleware-lane" value="Middleware" style="swimlane;horizontal=0;fillColor=#fff2cc;" vertex="1" parent="swimlane-container">
+          <mxGeometry x="0" y="220" width="1320" height="120" as="geometry" />
+        </mxCell>
+        
+        <!-- Orchestrator Lane -->
+        <mxCell id="orchestrator-lane" value="Orchestrator" style="swimlane;horizontal=0;fillColor=#e1d5e7;" vertex="1" parent="swimlane-container">
+          <mxGeometry x="0" y="340" width="1320" height="220" as="geometry" />
+        </mxCell>
+        
+        <!-- Services Lane -->
+        <mxCell id="services-lane" value="Services" style="swimlane;horizontal=0;fillColor=#d5e8d4;" vertex="1" parent="swimlane-container">
+          <mxGeometry x="0" y="560" width="1320" height="180" as="geometry" />
+        </mxCell>
+        
+        <!-- External Lane -->
+        <mxCell id="external-lane" value="External" style="swimlane;horizontal=0;fillColor=#f8cecc;" vertex="1" parent="swimlane-container">
+          <mxGeometry x="0" y="740" width="1320" height="180" as="geometry" />
+        </mxCell>
+        
+        <!-- State Machine Lane -->
+        <mxCell id="state-machine-lane" value="Chart State Machine" style="swimlane;horizontal=0;fillColor=#dae8fc;" vertex="1" parent="swimlane-container">
+          <mxGeometry x="0" y="920" width="1320" height="160" as="geometry" />
+        </mxCell>
+        
+        <!-- Flow Elements -->
+        
+        <!-- Start -->
+        <mxCell id="start" value="User sends&#xa;chat request" style="ellipse;whiteSpace=wrap;html=1;fillColor=#60a917;strokeColor=#2D7600;fontColor=#ffffff;" vertex="1" parent="client-lane">
+          <mxGeometry x="100" y="20" width="100" height="60" as="geometry" />
+        </mxCell>
+        
+        <!-- API Receive -->
+        <mxCell id="api-receive" value="Express Server&#xa;receives request" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="api-lane">
+          <mxGeometry x="90" y="20" width="120" height="60" as="geometry" />
+        </mxCell>
+        
+        <!-- Auth Check -->
+        <mxCell id="auth-check" value="JWT&#xa;Verification" style="rhombus;whiteSpace=wrap;html=1;" vertex="1" parent="middleware-lane">
+          <mxGeometry x="100" y="20" width="100" height="80" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="auth-fail" value="401&#xa;Unauthorized" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;" vertex="1" parent="middleware-lane">
+          <mxGeometry x="240" y="80" width="100" height="30" as="geometry" />
+        </mxCell>
+        
+        <!-- Rate Limit -->
+        <mxCell id="rate-limit-check" value="Rate Limit&#xa;Check" style="rhombus;whiteSpace=wrap;html=1;" vertex="1" parent="middleware-lane">
+          <mxGeometry x="380" y="20" width="100" height="80" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="rate-limit-fail" value="429&#xa;Too Many Requests" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;" vertex="1" parent="middleware-lane">
+          <mxGeometry x="520" y="80" width="120" height="30" as="geometry" />
+        </mxCell>
+        
+        <!-- Validation -->
+        <mxCell id="validate" value="Validate&#xa;Request Body" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="orchestrator-lane">
+          <mxGeometry x="120" y="20" width="120" height="40" as="geometry" />
+        </mxCell>
+        
+        <!-- Chart Request Check -->
+        <mxCell id="chart-check" value="Chart&#xa;Request?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#d4e1f5;" vertex="1" parent="orchestrator-lane">
+          <mxGeometry x="280" y="10" width="100" height="60" as="geometry" />
+        </mxCell>
+        
+        <!-- Build Context -->
+        <mxCell id="build-context" value="Build Context" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="orchestrator-lane">
+          <mxGeometry x="420" y="20" width="120" height="40" as="geometry" />
+        </mxCell>
+        
+        <!-- Memory Query -->
+        <mxCell id="memory-query" value="Query Short-term&#xa;Memory (Redis)" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="services-lane">
+          <mxGeometry x="420" y="20" width="120" height="40" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="rag-query" value="Query Vector&#xa;Memory (Qdrant)" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="services-lane">
+          <mxGeometry x="560" y="20" width="120" height="40" as="geometry" />
+        </mxCell>
+        
+        <!-- Decision -->
+        <mxCell id="decision" value="Decision&#xa;Engine" style="rhombus;whiteSpace=wrap;html=1;" vertex="1" parent="orchestrator-lane">
+          <mxGeometry x="590" y="10" width="120" height="60" as="geometry" />
+        </mxCell>
+        
+        <!-- Tool Path -->
+        <mxCell id="execute-tools" value="Execute&#xa;Tools" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="orchestrator-lane">
+          <mxGeometry x="750" y="80" width="100" height="40" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="browser-search" value="Browser&#xa;Search" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="external-lane">
+          <mxGeometry x="680" y="20" width="100" height="40" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="sql-query" value="SQL&#xa;Query" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="external-lane">
+          <mxGeometry x="800" y="20" width="100" height="40" as="geometry" />
+        </mxCell>
+        
+        <!-- LLM Path -->
+        <mxCell id="prepare-prompt" value="Prepare&#xa;Prompt" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="orchestrator-lane">
+          <mxGeometry x="890" y="20" width="100" height="40" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="llm-call" value="Call LLM&#xa;(Gemini)" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="services-lane">
+          <mxGeometry x="890" y="20" width="100" height="40" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="gemini-api" value="Google&#xa;Gemini 2.5" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="external-lane">
+          <mxGeometry x="890" y="20" width="100" height="40" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="fallback" value="Fallback to&#xa;OpenAI" style="rounded=1;whiteSpace=wrap;html=1;dashed=1;" vertex="1" parent="external-lane">
+          <mxGeometry x="1010" y="20" width="100" height="40" as="geometry" />
+        </mxCell>
+        
+        <!-- Chart Generation Path -->
+        <mxCell id="run-chart-gen" value="Run Chart&#xa;Generation" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d4e1f5;" vertex="1" parent="orchestrator-lane">
+          <mxGeometry x="280" y="110" width="100" height="60" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="state-planning" value="Planning&#xa;State" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="state-machine-lane">
+          <mxGeometry x="120" y="20" width="80" height="40" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="state-schema" value="Schema&#xa;Analysis" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="state-machine-lane">
+          <mxGeometry x="220" y="20" width="80" height="40" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="state-query-gen" value="Query&#xa;Generation" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="state-machine-lane">
+          <mxGeometry x="320" y="20" width="80" height="40" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="state-execute" value="Execute&#xa;Query" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="state-machine-lane">
+          <mxGeometry x="420" y="20" width="80" height="40" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="state-validate" value="Validate&#xa;Results" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="state-machine-lane">
+          <mxGeometry x="520" y="20" width="80" height="40" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="state-retry" value="Retry?" style="rhombus;whiteSpace=wrap;html=1;" vertex="1" parent="state-machine-lane">
+          <mxGeometry x="520" y="80" width="80" height="60" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="state-transform" value="Transform&#xa;to Nivo" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="state-machine-lane">
+          <mxGeometry x="620" y="20" width="80" height="40" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="chart-response" value="Chart Data&#xa;Response" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d4e1f5;" vertex="1" parent="orchestrator-lane">
+          <mxGeometry x="620" y="160" width="100" height="40" as="geometry" />
+        </mxCell>
+        
+        <!-- Response Processing -->
+        <mxCell id="filter-response" value="Filter&#xa;Response" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="orchestrator-lane">
+          <mxGeometry x="1030" y="20" width="100" height="40" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="store-memory" value="Store in&#xa;Memory" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="services-lane">
+          <mxGeometry x="1030" y="20" width="100" height="40" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="stream-check" value="Stream?" style="rhombus;whiteSpace=wrap;html=1;" vertex="1" parent="orchestrator-lane">
+          <mxGeometry x="1170" y="10" width="80" height="60" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="stream-response" value="SSE&#xa;Stream" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="api-lane">
+          <mxGeometry x="1160" y="20" width="100" height="40" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="json-response" value="JSON&#xa;Response" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="api-lane">
+          <mxGeometry x="1160" y="70" width="100" height="40" as="geometry" />
+        </mxCell>
+        
+        <!-- End -->
+        <mxCell id="end" value="Response&#xa;to User" style="ellipse;whiteSpace=wrap;html=1;fillColor=#60a917;strokeColor=#2D7600;fontColor=#ffffff;" vertex="1" parent="client-lane">
+          <mxGeometry x="1170" y="20" width="100" height="60" as="geometry" />
+        </mxCell>
+        
+        <!-- Flow Arrows -->
+        <mxCell id="flow1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="swimlane-container" source="start" target="api-receive">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="flow2" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="swimlane-container" source="api-receive" target="auth-check">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="flow3-success" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="swimlane-container" source="auth-check" target="rate-limit-check">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        
+        <mxCell id="flow3-fail" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#b85450;" edge="1" parent="swimlane-container" source="auth-check" target="auth-fail">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="flow4-success" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="swimlane-container" source="rate-limit-check" target="validate">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="flow4-fail" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#b85450;" edge="1" parent="swimlane-container" source="rate-limit-check" target="rate-limit-fail">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="flow5" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="swimlane-container" source="validate" target="chart-check">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        
+        <!-- Chart Generation Branch -->
+        <mxCell id="flow-chart-yes" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#4472C4;strokeWidth=2;" edge="1" parent="swimlane-container" source="chart-check" target="run-chart-gen">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="label-chart-yes" value="Yes" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" vertex="1" parent="swimlane-container">
+          <mxGeometry x="330" y="420" width="30" height="20" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="flow-chart-no" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="swimlane-container" source="chart-check" target="build-context">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="label-chart-no" value="No" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" vertex="1" parent="swimlane-container">
+          <mxGeometry x="390" y="370" width="30" height="20" as="geometry" />
+        </mxCell>
+        
+        <!-- Chart State Machine Flow -->
+        <mxCell id="flow-run-chart" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#4472C4;strokeWidth=2;" edge="1" parent="swimlane-container" source="run-chart-gen" target="state-planning">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="flow-state1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="swimlane-container" source="state-planning" target="state-schema">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="flow-state2" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="swimlane-container" source="state-schema" target="state-query-gen">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="flow-state3" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="swimlane-container" source="state-query-gen" target="state-execute">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="flow-state4" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="swimlane-container" source="state-execute" target="state-validate">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="flow-state5" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="swimlane-container" source="state-validate" target="state-retry">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="flow-retry-yes" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;dashed=1;" edge="1" parent="swimlane-container" source="state-retry" target="state-query-gen">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="560" y="1050" />
+              <mxPoint x="360" y="1050" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        
+        <mxCell id="flow-retry-no" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="swimlane-container" source="state-retry" target="state-transform">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="flow-state6" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#4472C4;strokeWidth=2;" edge="1" parent="swimlane-container" source="state-transform" target="chart-response">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="flow-chart-merge" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#4472C4;strokeWidth=2;" edge="1" parent="swimlane-container" source="chart-response" target="store-memory">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="750" y="540" />
+              <mxPoint x="750" y="600" />
+              <mxPoint x="1080" y="600" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        
+        <!-- Normal Flow -->
+        <mxCell id="flow6" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="swimlane-container" source="build-context" target="memory-query">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="flow7" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="swimlane-container" source="memory-query" target="rag-query">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="flow8" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="swimlane-container" source="rag-query" target="decision">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="flow9-tools" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="swimlane-container" source="decision" target="execute-tools">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        
+        <mxCell id="flow9-llm" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="swimlane-container" source="decision" target="prepare-prompt">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="flow10" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="swimlane-container" source="execute-tools" target="browser-search">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="flow11" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="swimlane-container" source="execute-tools" target="sql-query">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="flow12" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="swimlane-container" source="prepare-prompt" target="llm-call">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="flow13" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="swimlane-container" source="llm-call" target="gemini-api">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="flow14" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;dashed=1;" edge="1" parent="swimlane-container" source="gemini-api" target="fallback">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="flow15" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="swimlane-container" source="browser-search" target="prepare-prompt">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="730" y="890" />
+              <mxPoint x="940" y="890" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        
+        <mxCell id="flow16" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="swimlane-container" source="sql-query" target="prepare-prompt">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="850" y="890" />
+              <mxPoint x="940" y="890" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        
+        <mxCell id="flow17" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="swimlane-container" source="gemini-api" target="filter-response">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="940" y="860" />
+              <mxPoint x="1080" y="860" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        
+        <mxCell id="flow18" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="swimlane-container" source="filter-response" target="store-memory">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="flow19" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="swimlane-container" source="store-memory" target="stream-check">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="flow20-stream" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="swimlane-container" source="stream-check" target="stream-response">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="flow20-json" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="swimlane-container" source="stream-check" target="json-response">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="flow21-stream" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="swimlane-container" source="stream-response" target="end">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="flow21-json" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="swimlane-container" source="json-response" target="end">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        
+        <!-- Labels -->
+        <mxCell id="label-auth-success" value="Valid" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" vertex="1" parent="swimlane-container">
+          <mxGeometry x="260" y="260" width="40" height="20" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="label-auth-fail" value="Invalid" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" vertex="1" parent="swimlane-container">
+          <mxGeometry x="200" y="320" width="40" height="20" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="label-rate-success" value="OK" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" vertex="1" parent="swimlane-container">
+          <mxGeometry x="430" y="340" width="30" height="20" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="label-rate-fail" value="Exceeded" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" vertex="1" parent="swimlane-container">
+          <mxGeometry x="520" y="320" width="60" height="20" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="label-tools" value="Tools" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" vertex="1" parent="swimlane-container">
+          <mxGeometry x="700" y="440" width="40" height="20" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="label-llm" value="LLM" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" vertex="1" parent="swimlane-container">
+          <mxGeometry x="820" y="370" width="30" height="20" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="label-stream-yes" value="Yes" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" vertex="1" parent="swimlane-container">
+          <mxGeometry x="1210" y="370" width="30" height="20" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="label-stream-no" value="No" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" vertex="1" parent="swimlane-container">
+          <mxGeometry x="1210" y="440" width="30" height="20" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="label-retry" value="Retry" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" vertex="1" parent="swimlane-container">
+          <mxGeometry x="510" y="1030" width="40" height="20" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="progress-note" value="State Machine Progress: 10% → 20% → 30% → 50% → 70% → 90% → 100%" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=10;fontStyle=2;" vertex="1" parent="state-machine-lane">
+          <mxGeometry x="750" y="80" width="400" height="30" as="geometry" />
+        </mxCell>
+        
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile> 

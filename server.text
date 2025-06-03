@@ -1,0 +1,92 @@
+🎯 Objective
+
+Build a secure, modular monolithic Node.js server using LangChain.js to orchestrate a procedural AI agent with Gemini 2.5 as its LLM. The server should support MCP-based tool use, short-term and long-term memory, RAG, role-based access control, and robust telemetry and guardrails. Implement everything in TypeScript, emphasizing extensibility, observability, and safety.
+
+📁 1. Project Setup
+
+Prompt: Scaffold the foundational TypeScript project structure that will support LangChain.js logic, tool integration, memory, telemetry, and guardrails.
+
+Create project folder and initialize Node.js + TypeScript setup.
+
+Install all necessary packages for LLM, Redis, Qdrant, Auth0, environment loading, validation, and observability.
+
+Create .prettierrc, .eslintrc, and enforce strict mode in tsconfig.json for high code quality.
+
+Structure folders clearly for agent, routes, memory, auth, tools, and utils.
+
+🔐 2. Environment Variables
+
+Prompt: Securely externalize all configuration values into a .env file and use validation to ensure consistency across environments.
+
+Use dotenv-safe to load and validate environment variables.
+
+Add variables for all external services: LLM API keys, Qdrant, Redis, Auth0, MCP URLs.
+
+Ensure .env is excluded via .gitignore and provide .env.example template.
+
+🔌 3. LLM Gateway (Gemini)
+
+Prompt: Create an abstraction around Gemini 2.5 using LangChain.js that supports retry, logging, sanitization, fallback, and output filtering.
+
+Use LangChain’s ChatGoogleGenerativeAI or compatible interface.
+
+Sanitize prompts to remove escape vectors (e.g., prompt injection).
+
+Post-process LLM output to detect and neutralize hallucinations or disallowed outputs.
+
+Handle fallback to OpenAI if Gemini fails.
+
+Log prompt/response size and latency for observability.
+
+🧠 4. Agent Orchestrator
+
+Prompt: Implement the central orchestrator function in orchestrator.ts to parse user input, route to tools, memory, or LLM, and return a fully formed response.
+
+Use zod or joi to validate the shape of incoming requests.
+
+Build a decision engine (if/else or switch) to choose:
+
+whether to query memory,
+
+which MCP tool to call,
+
+or whether to resolve directly with the LLM.
+
+Assemble all necessary context (short-term, RAG, tool outputs) and pass it into the LLM call.
+
+Stream the final response back.
+
+🛠 5. Tools System (MCP-Based)
+
+Prompt: Integrate with external MCP-compatible tool servers for browser search and SQL querying. Secure the interaction and expose tools through LangChain.
+
+Implement clients that send structured JSON requests to MCP tool endpoints.
+
+Define tools using LangChain.js Tool class.
+
+Implement timeouts, retries, and error sanitization.
+
+Prevent unsafe SQL operations like DROP, DELETE, TRUNCATE, and log each query.
+
+Rate-limit tool usage per session or user to prevent abuse.
+
+🧬 6. Memory & RAG
+
+Prompt: Implement both short-term and long-term memory systems, integrated with LangChain retrievers.
+
+Redis memory:
+
+Store recent chat messages per user/session.
+
+Expire entries after X minutes of inactivity.
+
+Qdrant vector memory:
+
+Use OpenAI embeddings to encode documents.
+
+Store vectors with rich metadata (user role, document source).
+
+On queries, filter using metadata (e.g., role=admin, doc_type=policy).
+
+Inject retrieved content into the LLM context.
+
