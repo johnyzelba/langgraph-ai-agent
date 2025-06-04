@@ -55,17 +55,39 @@ export const createAgentRoutes = (orchestrator: AgentOrchestrator): Router => {
           res.setHeader('X-Accel-Buffering', 'no'); // Disable nginx buffering
 
           try {
-            // Stream response
-            for await (const chunk of orchestrator.streamResponse(agentRequest)) {
-              res.write(`data: ${JSON.stringify({ content: chunk })}\n\n`);
-            }
+            // Check if it's a chart request for special handling
+            if (orchestrator.isChartRequestPublic(agentRequest.message)) {
+              // Stream chart generation with progress events
+              let finalResult: any;
+              
+              for await (const event of orchestrator.streamResponse(agentRequest)) {
+                res.write(`data: ${JSON.stringify(event)}\n\n`);
+              }
 
-            // Send completion event
-            res.write(`data: ${JSON.stringify({ done: true })}\n\n`);
+              // The final result is returned by the generator
+              // Send completion event
+              res.write(`data: ${JSON.stringify({ type: 'done', completed: true })}\n\n`);
+            } else {
+              // Stream regular operations with progress events
+              for await (const event of orchestrator.streamResponse(agentRequest)) {
+                res.write(`data: ${JSON.stringify(event)}\n\n`);
+              }
+
+              // Send completion event
+              res.write(`data: ${JSON.stringify({ type: 'done', completed: true })}\n\n`);
+            }
+            
             res.end();
           } catch (error) {
             logger.error('Streaming error', { error });
-            res.write(`data: ${JSON.stringify({ error: 'Streaming failed' })}\n\n`);
+            res.write(`data: ${JSON.stringify({ 
+              type: 'error', 
+              data: { 
+                operation: 'streaming',
+                message: 'Streaming failed',
+                timestamp: Date.now()
+              }
+            })}\n\n`);
             res.end();
           }
         } else {

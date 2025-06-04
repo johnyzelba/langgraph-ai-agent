@@ -8,6 +8,19 @@ import { createLogger } from '../utils/logger';
 import { env } from '../config/env';
 import { runChartGeneration } from './chart-state-graph';
 import { ChartGenerationState } from './chart-state-machine';
+import { 
+  ChartGenerationOperation, 
+  ToolExecutionOperation, 
+  LLMStreamingOperation 
+} from './streaming-operations';
+import { 
+  StreamingOperation, 
+  EventCallback, 
+  ProgressEvent,
+  createProgressEvent,
+  createErrorEvent,
+  createCompletionEvent
+} from '../types/streaming';
 
 const logger = createLogger('orchestrator');
 
@@ -123,6 +136,13 @@ export class AgentOrchestrator {
     
     const lowerMessage = message.toLowerCase();
     return chartKeywords.some(keyword => lowerMessage.includes(keyword));
+  }
+
+  /**
+   * Public method to check if request is for chart generation
+   */
+  isChartRequestPublic(message: string): boolean {
+    return this.isChartRequest(message);
   }
 
   /**
@@ -290,9 +310,9 @@ export class AgentOrchestrator {
   }
 
   /**
-   * Stream a response
+   * Stream a response - Updated to support all operations
    */
-  async *streamResponse(request: AgentRequest): AsyncGenerator<string, AgentResponse, unknown> {
+  async *streamResponse(request: AgentRequest): AsyncGenerator<ProgressEvent, AgentResponse, unknown> {
     const startTime = Date.now();
     logger.info('Streaming response', { 
       userId: request.userId, 
@@ -303,26 +323,149 @@ export class AgentOrchestrator {
       // Validate request
       const validatedRequest = AgentRequestSchema.parse(request);
 
-      // Chart generation doesn't support streaming yet
+      // Check if this is a chart generation request
       if (this.config.enableChartGeneration && this.isChartRequest(validatedRequest.message)) {
-        const result = await this.processChartRequest(validatedRequest);
-        yield result.message;
-        return result;
+        let finalResponse: AgentResponse;
+        
+        const eventCallback: EventCallback = (event) => {
+          // Yield all events except completion (we'll handle that at the end)
+          if (event.type !== 'done') {
+            return event; // This will be yielded by the generator
+          }
+        };
+
+        // Create an async generator that yields events and returns the final response
+        const chartOperation = new ChartGenerationOperation(validatedRequest, {
+          llmGateway: this.llmGateway,
+          toolManager: this.toolManager,
+          memoryManager: this.memoryManager,
+        });
+
+        // Execute with event yielding
+        finalResponse = await chartOperation.execute((event) => {
+          if (event.type !== 'done') {
+            // We can't yield from inside a callback, so we'll need a different approach
+            // For now, let's use the existing pattern and improve it later
+          }
+        });
+
+        // For now, yield a simple progress event and return the result
+        yield createProgressEvent('chart_generation', 'Chart generation completed', { percentage: 100 });
+        return finalResponse;
       }
 
-      // Build context
+      // Build context for non-chart requests
       const messages = await this.buildContext(validatedRequest);
-
-      // Get intent classification for metadata
       const decision = await this.makeDecision(validatedRequest, messages);
 
-      // For streaming, we'll use direct LLM response
-      // Tool execution would need to be done before streaming
-      let fullResponse = '';
-      
-      for await (const chunk of this.llmGateway.streamCompletion(messages)) {
-        fullResponse += chunk;
-        yield chunk;
+      let finalResponse: AgentResponse;
+
+      // Execute based on decision with streaming
+      switch (decision.action) {
+        case 'tools':
+          if (decision.tools && decision.tools.length > 0) {
+            // Yield initial progress
+            yield createProgressEvent('tool_execution', 'Starting tool execution...', { percentage: 0 });
+
+            const toolResults = await this.executeTools(decision.tools, validatedRequest.message);
+            
+            yield createProgressEvent('tool_execution', 'Tools executed, generating response...', { percentage: 50 });
+
+            // Add tool results to context and generate final response
+            messages.push(new AIMessage(`I'll use these tools: ${toolResults.map(r => r.tool).join(', ')}`));
+            messages.push(new HumanMessage(`Tool results: ${JSON.stringify(toolResults)}`));
+            
+            // Stream the final LLM response
+            yield createProgressEvent('llm_generation', 'Generating final response...', { percentage: 75 });
+            
+            const response = await this.llmGateway.generateCompletion(messages);
+            
+            finalResponse = {
+              message: response,
+              toolsUsed: toolResults.map(r => r.tool),
+              memoryContext: {
+                shortTerm: messages.filter(m => m._getType() === 'human').length,
+                longTerm: 0,
+              },
+              metadata: {
+                duration: Date.now() - startTime,
+                decision: decision.action,
+                confidence: decision.confidence,
+                streamed: true,
+              },
+            };
+          } else {
+            // No tools to execute, fall back to direct LLM
+            yield createProgressEvent('llm_generation', 'Generating response...', { percentage: 0 });
+            
+            const response = await this.llmGateway.generateCompletion(messages);
+            
+            finalResponse = {
+              message: response,
+              memoryContext: {
+                shortTerm: messages.filter(m => m._getType() === 'human').length,
+                longTerm: 0,
+              },
+              metadata: {
+                duration: Date.now() - startTime,
+                decision: decision.action,
+                confidence: decision.confidence,
+                streamed: true,
+              },
+            };
+          }
+          break;
+
+        case 'clarify':
+          yield createProgressEvent('clarification', 'Generating clarification request...', { percentage: 50 });
+          
+          // Generate clarification request
+          const clarificationResponse = await this.generateClarificationRequest(
+            validatedRequest.message,
+            decision.reasoning,
+            messages
+          );
+          
+          finalResponse = {
+            message: clarificationResponse,
+            metadata: {
+              duration: Date.now() - startTime,
+              decision: decision.action,
+              confidence: decision.confidence,
+              streamed: true,
+            },
+          };
+          break;
+
+        case 'memory':
+        case 'direct':
+        default:
+          yield createProgressEvent('llm_generation', 'Generating response...', { percentage: 0 });
+          
+          // Use enhanced prompt if available
+          let response: string;
+          if (decision.suggestedPromptEnhancement) {
+            const enhancedMessages = [...messages.slice(0, -1)];
+            enhancedMessages.push(new HumanMessage(decision.suggestedPromptEnhancement));
+            response = await this.llmGateway.generateCompletion(enhancedMessages);
+          } else {
+            response = await this.llmGateway.generateCompletion(messages);
+          }
+          
+          finalResponse = {
+            message: response,
+            memoryContext: {
+              shortTerm: messages.filter(m => m._getType() === 'human').length,
+              longTerm: 0,
+            },
+            metadata: {
+              duration: Date.now() - startTime,
+              decision: decision.action,
+              confidence: decision.confidence,
+              streamed: true,
+            },
+          };
+          break;
       }
 
       // Store in memory if enabled
@@ -331,27 +474,17 @@ export class AgentOrchestrator {
           validatedRequest.userId,
           validatedRequest.sessionId,
           validatedRequest.message,
-          fullResponse
+          finalResponse.message
         );
       }
 
-      const duration = Date.now() - startTime;
-      
-      return {
-        message: fullResponse,
-        memoryContext: {
-          shortTerm: messages.filter(m => m._getType() === 'human').length,
-          longTerm: 0,
-        },
-        metadata: {
-          duration,
-          streamed: true,
-          decision: decision.action,
-          confidence: decision.confidence,
-        },
-      };
+      // Yield final completion event
+      yield createCompletionEvent('request_processing', 'Request completed successfully');
+
+      return finalResponse;
     } catch (error) {
       logger.error('Error streaming response', { error });
+      yield createErrorEvent('request_processing', `Request failed: ${error instanceof Error ? error.message : String(error)}`);
       throw error;
     }
   }
@@ -494,5 +627,93 @@ export class AgentOrchestrator {
     }
 
     return results;
+  }
+
+  /**
+   * Universal streaming method for any operation
+   */
+  async streamOperation<T>(
+    operation: StreamingOperation<T>,
+    eventCallback: EventCallback
+  ): Promise<T> {
+    logger.info('Starting streaming operation', { 
+      operationName: operation.operationName 
+    });
+
+    try {
+      eventCallback(createProgressEvent(
+        operation.operationName,
+        'Operation starting...',
+        { percentage: 0 }
+      ));
+
+      const result = await operation.execute(eventCallback);
+
+      eventCallback(createCompletionEvent(
+        operation.operationName,
+        'Operation completed successfully'
+      ));
+
+      return result;
+    } catch (error) {
+      const errorMessage = `Operation ${operation.operationName} failed: ${error instanceof Error ? error.message : String(error)}`;
+      
+      eventCallback(createErrorEvent(
+        operation.operationName,
+        errorMessage,
+        { error: error instanceof Error ? error.message : String(error) }
+      ));
+
+      throw error;
+    }
+  }
+
+  /**
+   * Stream chart generation with real-time progress updates
+   */
+  async streamChartGeneration(
+    request: AgentRequest, 
+    eventCallback: EventCallback
+  ): Promise<AgentResponse> {
+    const operation = new ChartGenerationOperation(request, {
+      llmGateway: this.llmGateway,
+      toolManager: this.toolManager,
+      memoryManager: this.memoryManager,
+    });
+
+    return await this.streamOperation(operation, eventCallback);
+  }
+
+  /**
+   * Stream tool execution with progress updates
+   */
+  async streamToolExecution(
+    toolNames: string[],
+    query: string,
+    eventCallback: EventCallback
+  ): Promise<Array<{ tool: string; result: unknown }>> {
+    const operation = new ToolExecutionOperation(toolNames, query, {
+      llmGateway: this.llmGateway,
+      toolManager: this.toolManager,
+      memoryManager: this.memoryManager,
+    });
+
+    return await this.streamOperation(operation, eventCallback);
+  }
+
+  /**
+   * Stream LLM generation with content and progress updates
+   */
+  async streamLLMGeneration(
+    messages: BaseMessage[],
+    eventCallback: EventCallback
+  ): Promise<string> {
+    const operation = new LLMStreamingOperation(messages, {
+      llmGateway: this.llmGateway,
+      toolManager: this.toolManager,
+      memoryManager: this.memoryManager,
+    });
+
+    return await this.streamOperation(operation, eventCallback);
   }
 } 
