@@ -1,8 +1,18 @@
 # LangGraph AI Agent Server
 
-A secure, modular monolithic Node.js server using LangChain.js to orchestrate a procedural AI agent with Gemini 2.5 as its LLM. The server supports MCP-based tool use, short-term and long-term memory, RAG, role-based access control, robust telemetry and guardrails, and advanced chart generation with state machines.
+A secure, modular monolithic Node.js server using LangChain.js to orchestrate a state-driven AI agent with Gemini 2.5 as its LLM. The server leverages LangGraph for advanced state management, supporting MCP-based tool use, short-term and long-term memory, RAG, role-based access control, robust telemetry and guardrails, and advanced chart generation with state machines.
 
 ## 🚀 Key Features
+
+### Advanced State Machine Architecture with LangGraph
+The server implements a sophisticated state machine architecture using LangGraph:
+- **Declarative State Nodes**: Each node represents a specific processing step with clear inputs/outputs
+- **Conditional Edge Routing**: Dynamic flow control based on request intent and processing results
+- **State Persistence**: Complete state tracking across the entire request lifecycle
+- **Error Recovery**: Built-in retry mechanisms with fallback paths
+- **Progress Tracking**: Real-time updates as requests flow through the system
+
+See [LangGraph Documentation](docs/langgraph-implementation.md) for details.
 
 ### AI-Based Intent Classification
 The server uses advanced AI-powered intent classification instead of simple keyword matching:
@@ -14,8 +24,8 @@ The server uses advanced AI-powered intent classification instead of simple keyw
 
 See [Intent Classification Documentation](docs/intent-classification.md) for details.
 
-### Advanced Chart Generation with State Machines 🎯 NEW!
-The server now includes a sophisticated chart generation system powered by LangGraph state machines:
+### Advanced Chart Generation with State Machines
+The server includes a sophisticated chart generation system powered by LangGraph state machines:
 - **Multi-Step Workflow**: Intelligent planning, query generation, execution, validation, and data transformation
 - **All Nivo Chart Types**: Support for line, bar, pie, scatter, heatmap, radar, sankey, and more
 - **Automatic Retries**: Smart retry logic with query regeneration on validation failures
@@ -25,44 +35,64 @@ The server now includes a sophisticated chart generation system powered by LangG
 
 See [Chart Generation Documentation](docs/chart-generation.md) for details.
 
+### Real-Time Streaming Response Architecture
+The server implements a robust streaming architecture:
+- **Server-Sent Events**: Efficient unidirectional streaming from server to client
+- **Typed Event System**: Structured event format with progress, content, done, and error types
+- **Node-Level Granularity**: Detailed progress updates from individual state machine nodes
+- **Resilient Connections**: Automatic reconnection and error handling
+- **Non-Blocking Operations**: Concurrent processing with non-interrupting updates
+
+See [Streaming Architecture Documentation](docs/streaming-architecture.md) for details.
+
 ## 🏗️ Architecture Overview
 
 ### Core Components
 
-1. **LLM Gateway** (`src/services/llm-gateway.ts`)
+1. **Agent Orchestrator** (`src/agent/orchestrator.ts`)
+   - Central coordination engine
+   - Intent classification and routing
+   - Context building from memory and RAG
+   - Request validation with Zod
+   - Real-time streaming with SSE
+
+2. **LangGraph State Machine** (`src/agent/chart-state-graph.ts`)
+   - Declarative state node definitions
+   - Conditional edge routing
+   - State persistence and management
+   - Progress tracking
+
+3. **LLM Gateway** (`src/services/llm-gateway.ts`)
    - Primary: Google Gemini 2.5
    - Fallback: OpenAI GPT-4
    - Input sanitization to prevent prompt injection
    - Output filtering for hallucinations and sensitive data
    - Retry logic and streaming support
 
-2. **Agent Orchestrator** (`src/agent/orchestrator.ts`)
-   - Central decision engine
-   - Routes requests to tools, memory, direct LLM, or chart generation
-   - Context building from memory and RAG
-   - Request validation with Zod
-   - State machine integration for complex workflows
+4. **State Machine Nodes** (`src/agent/nodes/`)
+   - `routingNode`: Initial intent classification
+   - `chattingNode`: Direct chat response generation
+   - `planningNode`: Chart planning and requirement analysis
+   - `understandingSchemaNode`: Database schema analysis
+   - `generatingQueryNode`: SQL query generation
+   - `executingQueryNode`: Safe query execution
+   - `validatingResultsNode`: Result validation and retry decisions
+   - `transformingDataNode`: Data transformation for visualization
 
-3. **Chart Generation State Machine** (`src/agent/chart-state-*.ts`)
-   - LangGraph-based state machine
-   - Planning → Schema Understanding → Query Generation → Execution → Validation → Transformation
-   - Automatic retries and error handling
-   - Progress callbacks for UI updates
-
-4. **Tools System** (`src/tools/tool-manager.ts`)
+5. **Tools System** (`src/tools/tool-manager.ts`)
    - MCP-compatible tool integration
    - Browser search tool
    - SQL query tool (read-only, sanitized)
    - Rate limiting per tool
    - Extensible tool registration
 
-5. **Memory System** (`src/memory/memory-manager.ts`)
+6. **Memory System** (`src/memory/memory-manager.ts`)
    - **Short-term**: Redis-based session memory
    - **Long-term**: Qdrant vector database with OpenAI embeddings
    - Role-based access filtering
    - TTL-based expiration
 
-6. **Security**
+7. **Security**
    - JWT authentication with Auth0 support
    - Role-based access control (RBAC)
    - Rate limiting with Redis backend
@@ -183,10 +213,12 @@ Response (non-streaming):
 
 Response (streaming):
 ```
-data: {"content": "Here are"}
-data: {"content": " the latest"}
-data: {"content": " AI news..."}
-data: {"done": true}
+data: {"type":"progress","data":{"operation":"agent_flow","message":"Classifying your request...","currentState":"routing","percentage":5}}
+data: {"type":"progress","data":{"operation":"agent_flow","message":"Building context...","currentState":"understanding_schema","percentage":20}}
+data: {"type":"progress","data":{"operation":"agent_flow","message":"Generating SQL query...","currentState":"generating_query","percentage":30}}
+data: {"type":"content","data":{"operation":"agent_flow","content":"Here are"}}
+data: {"type":"content","data":{"operation":"agent_flow","content":" the latest"}}
+data: {"type":"done","data":{"operation":"agent_flow","message":"Request completed"}}
 ```
 
 #### Chart Generation Example
@@ -198,28 +230,20 @@ Content-Type: application/json
   "message": "Create a bar chart showing top 10 products by revenue this month",
   "context": {
     "role": "analyst"
-  }
+  },
+  "stream": true
 }
 ```
 
-Response:
-```json
-{
-  "message": "Here is your sales chart:",
-  "chartData": {
-    "type": "bar",
-    "data": [...],
-    "config": {...},
-    "title": "Top 10 Products by Revenue"
-  },
-  "toolsUsed": ["sql_query"],
-  "metadata": {
-    "chartType": "bar",
-    "queryCount": 1,
-    "totalRows": 10,
-    "progressUpdates": [...]
-  }
-}
+Response (streaming):
+```
+data: {"type":"progress","data":{"operation":"agent_flow","message":"Analyzing request...","currentState":"planning","percentage":10}}
+data: {"type":"progress","data":{"operation":"agent_flow","message":"Understanding schema...","currentState":"understanding_schema","percentage":20}}
+data: {"type":"progress","data":{"operation":"agent_flow","message":"Generating query...","currentState":"generating_query","percentage":40}}
+data: {"type":"progress","data":{"operation":"agent_flow","message":"Executing query...","currentState":"executing_query","percentage":60}}
+data: {"type":"progress","data":{"operation":"agent_flow","message":"Validating results...","currentState":"validating_results","percentage":80}}
+data: {"type":"progress","data":{"operation":"agent_flow","message":"Transforming data...","currentState":"transforming_data","percentage":90}}
+data: {"type":"done","data":{"operation":"agent_flow","message":"Chart ready","chartData":{"type":"bar","data":[...]}}}
 ```
 
 #### Memory Statistics
@@ -291,6 +315,43 @@ See `env.example` for all available configuration options. Key variables:
 - `MCP_*_URL`: URLs for MCP tool servers
 
 ### Extending the System
+
+#### Adding New State Nodes
+
+1. Create a new node in `src/agent/nodes/`:
+```typescript
+export async function myCustomNode(
+  state: AgentState,
+  deps: NodeDependencies
+): Promise<Partial<AgentState>> {
+  // Implementation
+  return {
+    // Updated state properties
+  };
+}
+```
+
+2. Register in `chart-state-graph.ts`:
+```typescript
+workflow.addNode('my_custom', async (state: AgentState) => 
+  await myCustomNode(state, deps)
+);
+```
+
+3. Add edge routing:
+```typescript
+workflow.addConditionalEdges(
+  'previous_node',
+  (state: AgentState) => {
+    if (condition) return 'my_custom';
+    return 'other_node';
+  },
+  {
+    my_custom: 'my_custom',
+    other_node: 'other_node',
+  }
+);
+```
 
 #### Adding New Tools
 
