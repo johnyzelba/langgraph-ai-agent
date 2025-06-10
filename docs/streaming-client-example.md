@@ -112,7 +112,7 @@ eventSource.onmessage = (event) => {
         break;
         
       default:
-        console.log('Unknown event type:', data.type);
+        
     }
   } catch (error) {
     console.error('Failed to parse SSE data:', error);
@@ -128,7 +128,7 @@ function handleProgress(progressData) {
   
   // Log detailed progress for chart generation
   if (progressData.operation === 'chart_generation') {
-    console.log(`Chart Generation - ${progressData.currentState}: ${progressData.message}`);
+    
     
     // Update specific UI elements based on state
     switch (progressData.currentState) {
@@ -169,7 +169,7 @@ function handleContent(contentData) {
 }
 
 function handleCompletion(completionData) {
-  console.log('Operation completed:', completionData);
+  
   showStatus('Completed successfully!');
   hideProgressBar();
   
@@ -233,7 +233,7 @@ function updateResponseDisplay(content) {
 
 function displayChart() {
   // Chart data handling will depend on your chart library (e.g., Nivo, Chart.js)
-  console.log('Displaying chart with received data');
+  
 }
 ```
 

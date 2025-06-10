@@ -1,9 +1,10 @@
 import { Router, Request, Response } from 'express';
 import { z } from 'zod';
-import { AgentOrchestrator, AgentRequestSchema } from '../agent/orchestrator';
+import { AgentOrchestrator } from '../agent/orchestrator';
 import { verifyToken, requireRole } from '../middleware/auth';
 import { strictRateLimiter } from '../middleware/rate-limit';
 import { createLogger } from '../utils/logger';
+import { AgentRequestSchema } from '../agent/types';
 
 const logger = createLogger('agent-routes');
 
@@ -31,7 +32,7 @@ export const createAgentRoutes = (orchestrator: AgentOrchestrator): Router => {
       try {
         // Validate request body
         const body = ChatRequestSchema.parse(req.body);
-        
+
         // Build agent request
         const agentRequest = AgentRequestSchema.parse({
           userId: req.user!.userId,
@@ -55,34 +56,38 @@ export const createAgentRoutes = (orchestrator: AgentOrchestrator): Router => {
           res.setHeader('X-Accel-Buffering', 'no'); // Disable nginx buffering
 
           try {
-            // Check if it's a chart request for special handling
-            if (orchestrator.isChartRequestPublic(agentRequest.message)) {
-              // Stream chart generation with progress events
-              let finalResult: any;
-              
-              for await (const event of orchestrator.streamResponse(agentRequest)) {
-                res.write(`data: ${JSON.stringify(event)}\n\n`);
-              }
-
-              // The final result is returned by the generator
-              // Send completion event
-              res.write(`data: ${JSON.stringify({ type: 'done', completed: true })}\n\n`);
-            } else {
-              // Stream regular operations with progress events
-              for await (const event of orchestrator.streamResponse(agentRequest)) {
-                res.write(`data: ${JSON.stringify(event)}\n\n`);
-              }
-
-              // Send completion event
-              res.write(`data: ${JSON.stringify({ type: 'done', completed: true })}\n\n`);
+            // Stream with progress events and capture final result
+            const generator = orchestrator.streamResponse(agentRequest);
+            let finalResult: any = null;
+            
+            // Process all events from the generator
+            let result = await generator.next();
+            while (!result.done) {
+              // Send progress/content events
+              res.write(`data: ${JSON.stringify(result.value)}\n\n`);
+              result = await generator.next();
             }
             
+            // Capture the final result (AgentResponse)
+            finalResult = result.value;
+            
+            // Send the final result as a data event (contains chart data)
+            if (finalResult) {
+              res.write(`data: ${JSON.stringify({
+                type: 'result',
+                data: finalResult
+              })}\n\n`);
+            }
+
+            // Send completion event
+            res.write(`data: ${JSON.stringify({ type: 'done', completed: true })}\n\n`);
+
             res.end();
           } catch (error) {
             logger.error('Streaming error', { error });
-            res.write(`data: ${JSON.stringify({ 
-              type: 'error', 
-              data: { 
+            res.write(`data: ${JSON.stringify({
+              type: 'error',
+              data: {
                 operation: 'streaming',
                 message: 'Streaming failed',
                 timestamp: Date.now()
@@ -143,7 +148,7 @@ export const createAgentRoutes = (orchestrator: AgentOrchestrator): Router => {
           res.status(400).json({ error: 'Session ID is required' });
           return;
         }
-        
+
         const memoryManager = orchestrator['memoryManager'];
         await memoryManager.clearSessionMemory(req.user!.userId, sessionId);
         res.json({ message: 'Session memory cleared' });
@@ -160,7 +165,7 @@ export const createAgentRoutes = (orchestrator: AgentOrchestrator): Router => {
    */
   router.post('/memory/vector',
     verifyToken,
-    requireRole('admin'),
+    // requireRole('admin'),
     async (req: Request, res: Response) => {
       try {
         const { content, metadata } = z.object({

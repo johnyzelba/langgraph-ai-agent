@@ -239,7 +239,6 @@ export class ToolManager {
 
     // Register SQL query tool
     const sqlTool = new SQLQueryTool();
-    this.tools.set('sql', sqlTool);
     this.tools.set('sql_query', sqlTool);
 
     logger.info('Default tools registered', { 

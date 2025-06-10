@@ -40,43 +40,48 @@ export const verifyToken = async (
   next: NextFunction
 ): Promise<void> => {
   try {
-    // Extract token from Authorization header
-    const authHeader = req.headers.authorization;
-    if (!authHeader) {
-      res.status(401).json({ error: 'No authorization header' });
-      return;
-    }
+    // // Extract token from Authorization header
+    // const authHeader = req.headers.authorization;
+    // if (!authHeader) {
+    //   res.status(401).json({ error: 'No authorization header' });
+    //   return;
+    // }
 
-    const [bearer, token] = authHeader.split(' ');
-    if (bearer !== 'Bearer' || !token) {
-      res.status(401).json({ error: 'Invalid authorization format' });
-      return;
-    }
+    // const [bearer, token] = authHeader.split(' ');
+    // if (bearer !== 'Bearer' || !token) {
+    //   res.status(401).json({ error: 'Invalid authorization format' });
+    //   return;
+    // }
 
-    // Verify token
-    const decoded = jwt.verify(token, env.JWT_SECRET) as JWTPayload;
+    // // Verify token
+    // const decoded = jwt.verify(token, env.JWT_SECRET) as JWTPayload;
 
-    // Check token expiration
-    if (decoded.exp && decoded.exp * 1000 < Date.now()) {
-      res.status(401).json({ error: 'Token expired' });
-      return;
-    }
+    // // Check token expiration
+    // if (decoded.exp && decoded.exp * 1000 < Date.now()) {
+    //   res.status(401).json({ error: 'Token expired' });
+    //   return;
+    // }
 
-    // Check audience if configured
-    if (env.AUTH0_AUDIENCE && decoded.aud !== env.AUTH0_AUDIENCE) {
-      res.status(401).json({ error: 'Invalid token audience' });
-      return;
-    }
+    // // Check audience if configured
+    // if (env.AUTH0_AUDIENCE && decoded.aud !== env.AUTH0_AUDIENCE) {
+    //   res.status(401).json({ error: 'Invalid token audience' });
+    //   return;
+    // }
 
-    // Attach user to request
+    // // Attach user to request
+    // req.user = {
+    //   userId: decoded.sub,
+    //   email: decoded.email,
+    //   role: decoded.role,
+    //   permissions: decoded.permissions,
+    // };
+    // logger.debug('Token verified', { userId: decoded.sub });
+    
+    // Set default anonymous user when auth is disabled
     req.user = {
-      userId: decoded.sub,
-      email: decoded.email,
-      role: decoded.role,
-      permissions: decoded.permissions,
+      userId: 'anonymous'
     };
-
-    logger.debug('Token verified', { userId: decoded.sub });
+    
     next();
   } catch (error) {
     logger.error('Token verification failed', { error });

@@ -253,20 +253,40 @@ export class MemoryManager {
     try {
       const validatedOptions = VectorQueryOptionsSchema.parse(options);
       
-      // Build filter
-      const filter: Record<string, unknown> = {};
+      // Build filter in Qdrant format
+      let qdrantFilter: any = undefined;
+      
+      // Collect all filter conditions
+      const conditions: any[] = [];
+      
       if (validatedOptions.role) {
-        filter.role = validatedOptions.role;
+        conditions.push({
+          key: 'metadata.role',
+          match: { value: validatedOptions.role }
+        });
       }
+      
       if (validatedOptions.filter) {
-        Object.assign(filter, validatedOptions.filter);
+        Object.entries(validatedOptions.filter).forEach(([key, value]) => {
+          conditions.push({
+            key: `metadata.${key}`,
+            match: { value }
+          });
+        });
+      }
+      
+      // Build Qdrant filter structure if we have conditions
+      if (conditions.length > 0) {
+        qdrantFilter = {
+          must: conditions
+        };
       }
 
       // Perform similarity search
       const results = await this.vectorStore.similaritySearchWithScore(
         query,
         validatedOptions.limit || 5,
-        filter
+        qdrantFilter
       );
 
       // Filter by score threshold if provided

@@ -118,19 +118,19 @@ const configExample = {
   // - Lower (0.6) for more flexible interactions
 };
 
-console.log("Intent Classification Improvements:");
-console.log("==================================\n");
+
+
 
 testCases.forEach((test, index) => {
-  console.log(`Test Case ${index + 1}: "${test.message}"`);
-  console.log("Old System:", test.oldResult);
-  console.log("New System:", test.newResult);
-  console.log("---\n");
+  
+  
+  
+  
 });
 
-console.log("\nBenefits:");
-console.log("- No more missed intents due to missing keywords");
-console.log("- Confidence scoring for better decision making");
-console.log("- Ability to ask for clarification when unsure");
-console.log("- Suggested query enhancements for better results");
-console.log("- Transparent reasoning for each decision"); 
+
+
+
+
+
+ 

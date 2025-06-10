@@ -176,7 +176,7 @@ const result = await runChartGeneration(
     toolManager,
     memoryManager,
     progressCallback: (progress) => {
-      console.log(`${progress.percentage}% - ${progress.message}`);
+      
     },
   }
 );
